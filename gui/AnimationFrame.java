@@ -21,25 +21,25 @@ import java.awt.event.MouseMotionAdapter;
 public class AnimationFrame extends JFrame {
 
 	final public static int FRAMES_PER_SECOND = 60;
-	final long REFRESH_TIME = 1000 / FRAMES_PER_SECOND;	//MILLISECONDS
+	protected long REFRESH_TIME = 1000 / FRAMES_PER_SECOND;	//MILLISECONDS
 
-	final public static int SCREEN_HEIGHT = 600;
-	final public static int SCREEN_WIDTH = 800;
+	protected static int SCREEN_HEIGHT = 900;
+	protected static int SCREEN_WIDTH = 1200;
 
 	//These variables control where the screen is centered in relation to the logical center of universe.
 	//Generally it makes sense to have these start at half screen width and height, so that the logical
 	//center is rendered in the center of the screen. Changing them will 'pan' the screen.
-	private int screenOffsetX = SCREEN_WIDTH / 2;
-	private int screenOffsetY = SCREEN_HEIGHT / 2;
+	protected int screenOffsetX = SCREEN_WIDTH / 2;
+	protected int screenOffsetY = SCREEN_HEIGHT / 2;
 
-	private boolean SHOW_GRID = true;
-	private boolean DISPLAY_TIMING = false;
+	protected boolean SHOW_GRID = true;
+	protected boolean DISPLAY_TIMING = false;
 	
 	//scale at which to render the universe. When 1, each logical unit represents 1 pixel in both x and y dimension
-	private double scale = 1;
+	protected double scale = 1;
 	//point in universe on which the screen will center
-	private double logicalCenterX = 0;		
-	private double logicalCenterY = 0;
+	protected double logicalCenterX = 0;		
+	protected double logicalCenterY = 0;
 
 	//basic controls on interface... these are protected so that subclasses can access
 	protected JPanel panel = null;
@@ -47,7 +47,7 @@ public class AnimationFrame extends JFrame {
 	protected JLabel lblTop;
 	protected JLabel lblBottom;
 
-	private static boolean stop = false;
+	protected static boolean stop = false;
 
 	protected long total_elapsed_time = 0;
 	protected long lastRefreshTime = 0;
@@ -58,12 +58,12 @@ public class AnimationFrame extends JFrame {
 	protected Universe universe = null;
 
 	//local (and direct references to various objects in universe ... should reduce lag by avoiding dynamic lookup
-	private Animation animation = null;
-	private DisplayableSprite player1 = null;
-	private ArrayList<DisplayableSprite> sprites = null;
-	private ArrayList<Background> backgrounds = null;
-	private Background background = null;
-	int universeLevel = 0;
+	protected Animation animation = null;
+	protected DisplayableSprite player1 = null;
+	protected ArrayList<DisplayableSprite> sprites = null;
+	protected ArrayList<Background> backgrounds = null;
+	protected Background background = null;
+	protected int universeLevel = 0;
 	
 	/*
 	 * Much of the following constructor uses a library called Swing to create various graphical controls. You do not need
@@ -124,7 +124,7 @@ public class AnimationFrame extends JFrame {
 		cp.setBackground(Color.BLACK);
 		cp.setLayout(null);
 
-		panel = new DrawPanel();
+		panel = new AnimationPanel();
 		panel.setLayout(null);
 		panel.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 		getContentPane().add(panel, BorderLayout.CENTER);
@@ -189,6 +189,13 @@ public class AnimationFrame extends JFrame {
 	 * You can add a title screen here using a JDialog or similar
 	 */
 	protected void displayTitleScreen() {
+		
+	}
+	
+	/*
+	 * You can overload this method to add additional rendering logic 
+	 */
+	protected void paintAnimationPanel(Graphics g) {
 		
 	}
 	
@@ -259,6 +266,8 @@ public class AnimationFrame extends JFrame {
 				updateControls();
 				this.logicalCenterX = universe.getXCenter();
 				this.logicalCenterY = universe.getYCenter();
+				MouseInput.logicalX = translateToLogicalX(MouseInput.screenX);
+				MouseInput.logicalY = translateToLogicalY(MouseInput.screenY);
 
 				this.repaint();
 
@@ -346,10 +355,11 @@ public class AnimationFrame extends JFrame {
 	 * the gui, but what is being rendered is determined by the universe. In other words, a sprite may
 	 * be in a given logical location, but where it is rendered also depends on scale and camera placement
 	 */
-	class DrawPanel extends JPanel {
+	class AnimationPanel extends JPanel {
 
 		public void paintComponent(Graphics g)
 		{	
+						
 			if (universe == null) {
 				return;
 			}
@@ -393,6 +403,8 @@ public class AnimationFrame extends JFrame {
 					g.drawLine(0, y, SCREEN_WIDTH, y);
 				}
 			}			
+
+			paintAnimationPanel(g);
 			
 			if (DISPLAY_TIMING == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "interface", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
 			
@@ -461,26 +473,26 @@ public class AnimationFrame extends JFrame {
 		}				
 	}
 
-	private int translateToScreenX(double logicalX) {
+	protected int translateToScreenX(double logicalX) {
 		return screenOffsetX + scaleLogicalX(logicalX - logicalCenterX);
 	}		
-	private int scaleLogicalX(double logicalX) {
+	protected int scaleLogicalX(double logicalX) {
 		return (int) Math.round(scale * logicalX);
 	}
-	private int translateToScreenY(double logicalY) {
+	protected int translateToScreenY(double logicalY) {
 		return screenOffsetY + scaleLogicalY(logicalY - logicalCenterY);
 	}		
-	private int scaleLogicalY(double logicalY) {
+	protected int scaleLogicalY(double logicalY) {
 		return (int) Math.round(scale * logicalY);
 	}
 
-	private double translateToLogicalX(int screenX) {
-		int offset = screenX - screenOffsetX;
-		return offset / scale;
+	protected double translateToLogicalX(int screenX) {
+		double offset = screenX - screenOffsetX;
+		return (offset / scale) + (universe != null ? universe.getXCenter() : 0);
 	}
-	private double translateToLogicalY(int screenY) {
-		int offset = screenY - screenOffsetY;
-		return offset / scale;			
+	protected double translateToLogicalY(int screenY) {
+		double offset = screenY - screenOffsetY ;
+		return (offset / scale) + (universe != null ? universe.getYCenter() : 0);		
 	}
 	
 	protected void contentPane_mouseMoved(MouseEvent e) {
