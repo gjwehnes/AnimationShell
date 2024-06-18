@@ -2,6 +2,7 @@
 public class ShellAnimation implements Animation {
 
 	private static int universeCount = 0;
+	private Universe current = null;
 	
 	public static int getUniverseCount() {
 		return universeCount;
@@ -11,17 +12,23 @@ public class ShellAnimation implements Animation {
 		ShellAnimation.universeCount = count;
 	}
 
-	public Universe getNextUniverse() {
+	public Universe switchUniverse(Object event) {
 
 		universeCount++;
 		
 		if (universeCount == 1) {
-			return new ShellUniverse();
+			current = new ShellUniverse();
 		}
 		else {
-			return null;
+			current = null;
 		}
+		
+		return current;
 
+	}
+
+	public Universe getCurrentUniverse() {
+		return current;
 	}
 	
 }

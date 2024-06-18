@@ -1,6 +1,9 @@
 
 public interface Animation {
 	
-	public Universe getNextUniverse();	
+	public Universe getCurrentUniverse();
+	
+	public Universe switchUniverse(Object event);
+		
 
 }

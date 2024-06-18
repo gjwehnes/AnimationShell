@@ -216,7 +216,7 @@ public class AnimationFrame extends JFrame {
 
 		lastRefreshTime = System.currentTimeMillis();
 		
-		universe = animation.getNextUniverse();
+		universe = animation.switchUniverse(null);
 		universeLevel++;
 
 		while (stop == false && universe != null) {
@@ -285,7 +285,7 @@ public class AnimationFrame extends JFrame {
 	}
 
 	private void handleUniverseComplete() {
-		universe = animation.getNextUniverse();		
+		universe = animation.switchUniverse(null);		
 	}
 	protected void updateControls() {
 		
