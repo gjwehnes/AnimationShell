@@ -308,7 +308,8 @@ public class AnimationFrame extends JFrame {
 
 				//update logical
 				animation.update(this, deltaTime);
-				universe.update(null, deltaTime);
+				universe.update(animation, deltaTime);
+
 				if (DISPLAY_TIMING == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "logic", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
 				
 				//update interface
