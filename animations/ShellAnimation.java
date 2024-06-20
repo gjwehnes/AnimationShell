@@ -30,8 +30,8 @@ public class ShellAnimation implements Animation {
 	}
 
 	@Override
-	public void update(KeyboardInput keyboard, long actual_delta_time) {
-		if (keyboard.keyDownOnce(27)) {
+	public void update(AnimationFrame frame, long actual_delta_time) {		
+		if ( KeyboardInput.getKeyboard().keyDownOnce(27)) {
 			animationComplete = true;
 		}				
 	}

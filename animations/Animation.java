@@ -13,6 +13,6 @@ public interface Animation {
 
 	public void setComplete(boolean complete);
 	
-	public void update(KeyboardInput keyboard, long actual_delta_time);	
+	public void update(AnimationFrame frame, long actual_delta_time);	
 	
 }

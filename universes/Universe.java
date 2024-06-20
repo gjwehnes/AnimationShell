@@ -22,7 +22,6 @@ public interface Universe {
 	public ArrayList<DisplayableSprite> getSprites();	
 	public ArrayList<Background> getBackgrounds();		
 
-	public void update(KeyboardInput keyboard, long actual_delta_time);
-    
-	
+	public void update(Animation animation, long actual_delta_time);
+    	
 }

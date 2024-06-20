@@ -20,4 +20,6 @@ public interface Background {
 
 	public void setShiftY(double shiftY);
 	
+	public void update(Universe universe, long actual_delta_time);		
+	
 }

@@ -54,7 +54,7 @@ public class AnimationFrame extends JFrame {
 	protected long deltaTime = 0;
 	protected boolean isPaused = false;
 
-	protected KeyboardInput keyboard = new KeyboardInput();
+	protected KeyboardInput keyboard = KeyboardInput.getKeyboard();
 	protected Universe universe = null;
 
 	//local (and direct references to various objects in universe ... should reduce lag by avoiding dynamic lookup
@@ -264,11 +264,18 @@ public class AnimationFrame extends JFrame {
 		 */
 		while (stop == false && animation.isComplete() == false) {
 			
+			//before the next universe is animated, allow other actions to take place
 			universeSwitched();
+			// the gui needs to acknowledge that the universe switch was detected
+			// so that the gui can reset the switched flag
+			animation.acknowledgeUniverseSwitched();			
 			setLocalObjectVariables();
-
-			// inner game loop which will run until stop is signaled or until the universe is complete / switched
-			while (stop == false && universe.isComplete() == false && animation.isComplete() == false && animation.getUniverseSwitched() == false) {
+			//(re)set the keyboard to current state
+			keyboard.reset();
+			keyboard.poll();
+			
+			// inner game loop which will animate the current universe until stop is signaled or until the universe is complete / switched
+			while (stop == false && animation.isComplete() == false && universe.isComplete() == false && animation.getUniverseSwitched() == false) {
 				
 				if (DISPLAY_TIMING == true) System.out.println(String.format("animation loop: %10s @ %6d", "sleep", System.currentTimeMillis() % 1000000));
 
@@ -300,8 +307,8 @@ public class AnimationFrame extends JFrame {
 				handleKeyboardInput();
 
 				//update logical
-				animation.update(keyboard, deltaTime);
-				universe.update(keyboard, deltaTime);
+				animation.update(this, deltaTime);
+				universe.update(null, deltaTime);
 				if (DISPLAY_TIMING == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "logic", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
 				
 				//update interface
@@ -315,11 +322,6 @@ public class AnimationFrame extends JFrame {
 
 			}
 			
-			// the gui needs to acknowledge that the universe switch was detected
-			// so that the gui can reset the switched flag
-			animation.acknowledgeUniverseSwitched();
-			keyboard.poll();
-
 		}
 
 		System.out.println("animation complete");
