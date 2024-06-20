@@ -1,33 +1,43 @@
 
 public class ShellAnimation implements Animation {
 
-	private static int universeCount = 0;
-	private Universe current = null;
+	private Universe current = new ShellUniverse();
+	private boolean universeSwitched = false;
+	private boolean animationComplete = false;
 	
-	public static int getUniverseCount() {
-		return universeCount;
+	public Universe getCurrentUniverse() {
+		return current;
+	}
+	
+	@Override
+	public boolean getUniverseSwitched() {
+		return universeSwitched;
 	}
 
-	public static void setUniverseCount(int count) {
-		ShellAnimation.universeCount = count;
+	@Override
+	public void acknowledgeUniverseSwitched() {
+		this.universeSwitched = false;		
+	}
+
+	@Override
+	public boolean isComplete() {
+		return animationComplete;
+	}
+
+	@Override
+	public void setComplete(boolean complete) {
+		this.animationComplete = true;		
+	}
+
+	@Override
+	public void update(KeyboardInput keyboard, long actual_delta_time) {
+		if (keyboard.keyDownOnce(27)) {
+			animationComplete = true;
+		}				
 	}
 
 	public Universe switchUniverse(Object event) {
-
-		universeCount++;
-		
-		if (universeCount == 1) {
-			current = new ShellUniverse();
-		}
-		else {
-			current = null;
-		}
-		
-		return current;
-
-	}
-
-	public Universe getCurrentUniverse() {
+		animationComplete = true;
 		return current;
 	}
 	

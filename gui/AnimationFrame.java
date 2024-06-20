@@ -63,7 +63,6 @@ public class AnimationFrame extends JFrame {
 	protected ArrayList<DisplayableSprite> sprites = null;
 	protected ArrayList<Background> backgrounds = null;
 	protected Background background = null;
-	protected int universeLevel = 0;
 	
 	/*
 	 * Much of the following constructor uses a library called Swing to create various graphical controls. You do not need
@@ -177,20 +176,61 @@ public class AnimationFrame extends JFrame {
 		};
 
 		thread.start();
-		//start the animation loop so that it can initialize at the same time as a title screen being visible
-		//as it runs on a separate thread, it will execute asynchronously
-		displayTitleScreen();
+		animationInitialize();
 				
 		System.out.println("main() complete");
 
 	}
+
+	
 	
 	/*
-	 * You can add a title screen here using a JDialog or similar
+	 * You can add code for displaying gui elements when the animation initializes using a JDialog or similar
+	 * 
+	 * Note that this method runs runs asynchronous with the instantiation of the animation loop, which may
+	 * take significant time. Thus, this is an ideal place for a title screen
 	 */
-	protected void displayTitleScreen() {
+	protected void animationInitialize() {
 		
 	}
+	
+	/*
+	 * You can add code for displaying gui elements when the animation starts using a JDialog or similar
+	 * 
+	 * Note that this method runs runs synchronous within the animation thread. Thus, if the a modal dialogue
+	 * is shown, the animation will not start, but a non-modal dialogue will appear alongside the animation
+	 */
+	protected void animationStart() {		
+	}
+	
+	/*
+	 * You can add code for displaying gui elements when there is a switch in universe (e.g. a next level dialogue)
+	 */
+	
+	
+	protected void universeSwitched() {
+	}
+	
+	/*
+	 * You can add code for displaying gui elements when the animation is fully complete (e.g. display a high score screen)
+	 */
+	protected void animationEnd() {
+		
+	}
+
+	private void setLocalObjectVariables() {
+		/*
+		 * the following code is added to improve performance...
+		 * by creating local object variables to the current universe / backgrounds / sprites, there is less redirection
+		 * 
+		 */
+		universe = animation.getCurrentUniverse();
+		sprites = universe.getSprites();
+		player1 = universe.getPlayer1();
+		backgrounds = universe.getBackgrounds();
+		this.scale = universe.getScale();
+	}
+	
 	
 	/*
 	 * You can overload this method to add additional rendering logic 
@@ -214,21 +254,22 @@ public class AnimationFrame extends JFrame {
 	 */
 	private void animationLoop() {
 
-		lastRefreshTime = System.currentTimeMillis();
+		lastRefreshTime = System.currentTimeMillis();		
+		universe = animation.getCurrentUniverse();
+
+		animationStart();
 		
-		universe = animation.switchUniverse(null);
-		universeLevel++;
+		/* 
+		 * outer game loop, which will run until stop is signaled or the animation is complete
+		 */
+		while (stop == false && animation.isComplete() == false) {
+			
+			universeSwitched();
+			setLocalObjectVariables();
 
-		while (stop == false && universe != null) {
-
-			sprites = universe.getSprites();
-			player1 = universe.getPlayer1();
-			backgrounds = universe.getBackgrounds();
-			this.scale = universe.getScale();
-
-			// main game loop
-			while (stop == false && universe.isComplete() == false) {
-
+			// inner game loop which will run until stop is signaled or until the universe is complete / switched
+			while (stop == false && universe.isComplete() == false && animation.isComplete() == false && animation.getUniverseSwitched() == false) {
+				
 				if (DISPLAY_TIMING == true) System.out.println(String.format("animation loop: %10s @ %6d", "sleep", System.currentTimeMillis() % 1000000));
 
 				//adapted from http://www.java-gaming.org/index.php?topic=24220.0
@@ -259,6 +300,7 @@ public class AnimationFrame extends JFrame {
 				handleKeyboardInput();
 
 				//update logical
+				animation.update(keyboard, deltaTime);
 				universe.update(keyboard, deltaTime);
 				if (DISPLAY_TIMING == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "logic", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
 				
@@ -272,8 +314,10 @@ public class AnimationFrame extends JFrame {
 				this.repaint();
 
 			}
-
-			handleUniverseComplete();
+			
+			// the gui needs to acknowledge that the universe switch was detected
+			// so that the gui can reset the switched flag
+			animation.acknowledgeUniverseSwitched();
 			keyboard.poll();
 
 		}
@@ -284,13 +328,9 @@ public class AnimationFrame extends JFrame {
 
 	}
 
-	private void handleUniverseComplete() {
-		universe = animation.switchUniverse(null);		
-	}
 	protected void updateControls() {
 		
 		this.lblTop.setText(String.format("Time: %9.3f;  offsetX: %5d; offsetY: %5d;  scale: %3.3f", total_elapsed_time / 1000.0, screenOffsetX, screenOffsetY, scale));
-		this.lblBottom.setText(Integer.toString(universeLevel));
 		if (universe != null) {
 			this.lblBottom.setText(universe.toString());
 		}

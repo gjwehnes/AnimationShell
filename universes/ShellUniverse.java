@@ -61,11 +61,6 @@ public class ShellUniverse implements Universe {
 
 	public void update(KeyboardInput keyboard, long actual_delta_time) {
 
-		if (keyboard.keyDownOnce(27)) {
-			complete = true;
-			this.player1.setDispose(true);
-		}
-		
 		for (int i = 0; i < sprites.size(); i++) {
 			DisplayableSprite sprite = sprites.get(i);
 			sprite.update(this, keyboard, actual_delta_time);

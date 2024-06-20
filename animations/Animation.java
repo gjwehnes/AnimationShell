@@ -5,5 +5,14 @@ public interface Animation {
 	
 	public Universe switchUniverse(Object event);
 		
+	public boolean getUniverseSwitched();
 
+	public void acknowledgeUniverseSwitched();
+
+	public boolean isComplete();
+
+	public void setComplete(boolean complete);
+	
+	public void update(KeyboardInput keyboard, long actual_delta_time);	
+	
 }
