@@ -4,10 +4,9 @@
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Arrays;
 
 public class KeyboardInput implements KeyListener {
-
-	private static final int KEY_COUNT = 256;
 	
 	public static final int KEY_BACKSPACE = 8;
 	public static final int KEY_TAB = 9;
@@ -120,15 +119,29 @@ public class KeyboardInput implements KeyListener {
 
 	// Polled keyboard state
 	private KeyState[] keys = null;
+	private static KeyboardInput instance = null;
+	private static final int KEY_COUNT = 256;
 
-	public KeyboardInput() {
+	private KeyboardInput() {
+		reset();
+	}
+
+	public void reset() {
 		currentKeys = new boolean[ KEY_COUNT ];
 		keys = new KeyState[ KEY_COUNT ];
 		for( int i = 0; i < KEY_COUNT; ++i ) {
 			keys[ i ] = KeyState.RELEASED;
 		}
+		
 	}
-
+	
+	public static KeyboardInput getKeyboard() {
+		if (instance == null) {
+			instance = new KeyboardInput();
+		}
+		return instance;
+	}
+		
 	public synchronized void poll() {
 		for( int i = 0; i < KEY_COUNT; ++i ) {
 			// Set the key state 
