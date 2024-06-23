@@ -1,7 +1,21 @@
-//retrieved from https://www.gamedev.net/articles/programming/general-and-gameplay-programming/java-games-keyboard-and-mouse-r2439/
+// retrieved from https://www.gamedev.net/articles/programming/general-and-gameplay-programming/java-games-keyboard-and-mouse-r2439/
+// codes used are javascript char codes. See https://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes
+// modified to act as singleton class
 
-//codes used are javascript char codes. See https://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes
-
+/*
+ * This is an example of a singleton class, which is a class intended to only 
+ * have one instance, or none if not used. This allows the use of a global object
+ * if required, but the preservation of resources if not. The instance is visible
+ * to all other objects, which means it does not need to be passed as a parameter 
+ * 
+ * For this project, having one instance only of the keyboard state is obviously
+ * important and logical. If two instances exist, they could be out-of-sync, which
+ * makes for very difficult debugging. And, there is only one keyboard after all.
+ * 
+ * See below for how to make a class a singleton. Also, see
+ * https://www.baeldung.com/java-singleton 
+ * or https://www.javatpoint.com/singleton-design-pattern-in-java
+ */
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Arrays;
@@ -122,6 +136,7 @@ public class KeyboardInput implements KeyListener {
 	private static KeyboardInput instance = null;
 	private static final int KEY_COUNT = 256;
 
+	// a private constructor ensures that the keyboard cannot be instantiated from outside the class.
 	private KeyboardInput() {
 		reset();
 	}
@@ -135,6 +150,8 @@ public class KeyboardInput implements KeyListener {
 		
 	}
 	
+	// this method provides any other class access to the one instance of the Keyboard class. If one does not
+	// yet exist, then instantiate one now.
 	public static KeyboardInput getKeyboard() {
 		if (instance == null) {
 			instance = new KeyboardInput();
