@@ -47,10 +47,6 @@ public class ShellUniverse implements Universe {
 		return backgrounds;
 	}	
 
-	public DisplayableSprite getPlayer1() {
-		return player1;
-	}
-
 	public ArrayList<DisplayableSprite> getSprites() {
 		return sprites;
 	}

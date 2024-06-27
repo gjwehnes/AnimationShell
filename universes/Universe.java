@@ -17,8 +17,6 @@ public interface Universe {
 	public boolean isComplete();
 	public void setComplete(boolean complete);
 	
-	public DisplayableSprite getPlayer1();
-
 	public ArrayList<DisplayableSprite> getSprites();	
 	public ArrayList<Background> getBackgrounds();		
 
