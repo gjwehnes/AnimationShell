@@ -31,7 +31,7 @@ public class AnimationFrame extends JFrame {
 	// want to place sprites relative to the screen boundaries
 	protected static final int STANDARD_SCREEN_HEIGHT = 800;
 	protected static final int STANDARD_SCREEN_WIDTH = 1200;
-	
+
 	protected static int screenHeight = STANDARD_SCREEN_HEIGHT;
 	protected static int screenWidth = STANDARD_SCREEN_WIDTH;
 
@@ -43,7 +43,7 @@ public class AnimationFrame extends JFrame {
 
 	protected boolean showGrid = true;
 	protected boolean displayTiming = false;
-	
+
 	//scale at which to render the universe. When 1, each logical unit represents 1 pixel in both x and y dimension
 	protected double scale = 1;
 	//used to keep record of the scale if the frame is resized
@@ -59,7 +59,7 @@ public class AnimationFrame extends JFrame {
 	protected JLabel lblBottom;
 
 	protected boolean stop = false;
-	protected boolean cancel = false;
+	protected boolean windowClosed = false;
 
 	protected long total_elapsed_time = 0;
 	protected long lastRefreshTime = 0;
@@ -74,7 +74,7 @@ public class AnimationFrame extends JFrame {
 	protected ArrayList<DisplayableSprite> sprites = null;
 	protected ArrayList<Background> backgrounds = null;
 	protected Background background = null;
-	
+
 	/*
 	 * Much of the following constructor uses a library called Swing to create various graphical controls. You do not need
 	 * to modify this code to create an animation, but certainly many custom controls could be added.
@@ -103,16 +103,21 @@ public class AnimationFrame extends JFrame {
 				contentPane_mouseExited(e);
 			}
 		});
-				
+
 		this.animation = animation;
 		this.setFocusable(true);
 		this.setSize(screenWidth + 20, screenHeight + 36);
 
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);		
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				this_windowClosing(e);
 			}
+			public void windowClosed(WindowEvent e) {
+				this_windowClosed(e);
+			}
+
 		});
 
 		this.addKeyListener(new KeyAdapter() {
@@ -135,9 +140,9 @@ public class AnimationFrame extends JFrame {
 				contentPane_mouseMoved(e);
 			}
 		});
-		
 
-		
+
+
 		Container cp = getContentPane();
 		cp.setBackground(Color.BLACK);
 		cp.setLayout(null);
@@ -185,10 +190,12 @@ public class AnimationFrame extends JFrame {
 	 */	
 	public void start()
 	{
-		Thread thread = new Thread()
+		System.out.println("start() start");
+		Thread thread = new Thread("animation loop")
 		{
 			public void run()
 			{
+				System.out.println("run() start");
 				animationLoop();
 				System.out.println("run() complete");
 			}
@@ -196,13 +203,11 @@ public class AnimationFrame extends JFrame {
 
 		thread.start();
 		animationInitialize();
-				
-		System.out.println("main() complete");
+
+		System.out.println("start() complete");
 
 	}
 
-	
-	
 	/*
 	 * You can add code for displaying gui elements when the animation initializes using a JDialog or similar
 	 * 
@@ -213,9 +218,9 @@ public class AnimationFrame extends JFrame {
 	 * a 'splash' screen while it does so.
 	 */
 	protected void animationInitialize() {
-		
+
 	}
-	
+
 	/*
 	 * You can add code for displaying gui elements when the animation starts using a JDialog or similar
 	 * 
@@ -226,20 +231,20 @@ public class AnimationFrame extends JFrame {
 	 */
 	protected void animationStart() {		
 	}
-	
+
 	/*
 	 * You can add code for displaying gui elements when there is a switch in universe (e.g. a next level dialogue)
 	 */
-	
-	
+
+
 	protected void universeSwitched() {
 	}
-	
+
 	/*
 	 * You can add code for displaying gui elements when the animation is fully complete (e.g. display a high score screen)
 	 */
 	protected void animationEnd() {
-		
+
 	}
 
 	private void setLocalObjectVariables() {
@@ -253,15 +258,15 @@ public class AnimationFrame extends JFrame {
 		backgrounds = universe.getBackgrounds();
 		this.scale = universe.getScale();
 	}
-	
-	
+
+
 	/*
 	 * You can overload this method to add additional rendering logic 
 	 */
 	protected void paintAnimationPanel(Graphics g) {
-		
+
 	}
-	
+
 	/*
 	 * The animationLoop runs on the logical thread, and is only active when the universe needs to be
 	 * updated. There are actually two loops here. The outer loop cycles through all universes as provided
@@ -277,21 +282,23 @@ public class AnimationFrame extends JFrame {
 	 */
 	private void animationLoop() {
 
+		System.out.println("animationLoop() start");
+
 		lastRefreshTime = System.currentTimeMillis();		
 		universe = animation.getCurrentUniverse();
 
 		animationStart();
 
 		//it may be that the animation is stopped before it even started... in this case, do not ever make the frame visible
-//		if (stop != false) {
+		if (stop == false) {
 			this.setVisible(true);
-//		}
-		
+		}
+
 		/* 
 		 * outer game loop, which will run until stop is signaled or the animation is complete
 		 */
 		while (stop == false && animation.isComplete() == false) {
-			
+
 			//before the next universe is animated, allow other actions to take place
 			universeSwitched();
 			// the gui needs to acknowledge that the universe switch was detected
@@ -301,10 +308,10 @@ public class AnimationFrame extends JFrame {
 			//(re)set the keyboard to current state
 			keyboard.reset();
 			keyboard.poll();
-			
+
 			// inner game loop which will animate the current universe until stop is signaled or until the universe is complete / switched
 			while (stop == false && animation.isComplete() == false && universe.isComplete() == false && animation.getUniverseSwitched() == false) {
-				
+
 				if (displayTiming == true) System.out.println(String.format("animation loop: %10s @ %6d", "sleep", System.currentTimeMillis() % 1000000));
 
 				//adapted from http://www.java-gaming.org/index.php?topic=24220.0
@@ -329,7 +336,7 @@ public class AnimationFrame extends JFrame {
 				deltaTime = (isPaused ? 0 : System.currentTimeMillis() - lastRefreshTime);
 				lastRefreshTime = System.currentTimeMillis();
 				total_elapsed_time += deltaTime;
-				
+
 				//read input
 				keyboard.poll();
 				handleKeyboardInput();
@@ -339,31 +346,39 @@ public class AnimationFrame extends JFrame {
 				universe.update(animation, deltaTime);
 
 				if (displayTiming == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "logic", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
-				
+
 				//update interface
 				updateControls();
-				
+
 				//create local copies of values from the universe. this seems to improve performance substantially
 				this.logicalCenterX = universe.getXCenter();
 				this.logicalCenterY = universe.getYCenter();
-				
+
 				MouseInput.logicalX = translateToLogicalX(MouseInput.screenX);
 				MouseInput.logicalY = translateToLogicalY(MouseInput.screenY);
 
 				this.repaint();
 
 			}
-			
+
 		}
 
-		System.out.println("animation complete");
 		AudioPlayer.setStopAll(true);
-		dispose();
+		this.setVisible(false);
+
+		//there seems to be an issue whereby if the frame (window) is closed by the user,
+		//it caused the dispose() method to hang. thus, only call if the loop terminated
+		//for other reasons
+		if (windowClosed == false) {
+			dispose();
+		}
+
+		System.out.println("animationLoop() complete");
 
 	}
 
 	protected void updateControls() {
-		
+
 		this.lblTop.setText(String.format("Time: %9.3f;  offsetX: %5d; offsetY: %5d;  scale: %3.3f", total_elapsed_time / 1000.0, screenOffsetX, screenOffsetY, scale));
 		if (universe != null) {
 			this.lblBottom.setText(universe.toString());
@@ -383,7 +398,7 @@ public class AnimationFrame extends JFrame {
 	}
 
 	private void handleKeyboardInput() {
-		
+
 		if (keyboard.keyDown(KeyboardInput.KEY_P) && ! isPaused) {
 			btnPauseRun_mouseClicked(null);	
 		}
@@ -400,7 +415,7 @@ public class AnimationFrame extends JFrame {
 			previousScale = scale;
 			contentPane_mouseMoved(null);
 		}
-		
+
 		if (keyboard.keyDown(KeyboardInput.KEY_A)) {
 			screenOffsetX += 1;
 		}
@@ -435,7 +450,7 @@ public class AnimationFrame extends JFrame {
 
 		public void paintComponent(Graphics g)
 		{	
-						
+
 			if (universe == null) {
 				return;
 			}
@@ -460,7 +475,7 @@ public class AnimationFrame extends JFrame {
 					}
 				}				
 			}
-			
+
 			if (showGrid) {
 				for (int x = 0; x <= screenWidth; x+=50) {
 					if (x % 100 == 0) {
@@ -481,11 +496,11 @@ public class AnimationFrame extends JFrame {
 			}			
 
 			paintAnimationPanel(g);
-			
+
 			if (displayTiming == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "interface", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
-			
+
 		}
-		
+
 		/*
 		 * The algorithm for rendering a background may appear complex, but you can think of it as
 		 * 'tiling' the screen from top left to bottom right. Each time, the gui determines a screen coordinate
@@ -497,19 +512,19 @@ public class AnimationFrame extends JFrame {
 		 * but below the previously drawn tile. Repeat until the entire panel is covered.
 		 */
 		private void paintBackground(Graphics g, Background background) {
-			
+
 			if ((g == null) || (background == null)) {
 				return;
 			}
-			
+
 			//what tile covers the top-left corner?
 			double logicalLeft = (logicalCenterX  - (screenOffsetX / scale) - background.getShiftX());
 			double logicalTop =  (logicalCenterY - (screenOffsetY / scale) - background.getShiftY()) ;
-						
+
 			int row = background.getRow((int)(logicalTop - background.getShiftY() ));
 			int col = background.getCol((int)(logicalLeft - background.getShiftX()  ));
 			Tile tile = background.getTile(col, row);
-			
+
 			boolean rowDrawn = false;
 			boolean screenDrawn = false;
 			while (screenDrawn == false) {
@@ -570,7 +585,7 @@ public class AnimationFrame extends JFrame {
 		double offset = screenY - screenOffsetY ;
 		return (offset / scale) + (universe != null ? universe.getYCenter() : 0);		
 	}
-	
+
 	protected void contentPane_mouseMoved(MouseEvent e) {
 		Point point = this.getContentPane().getMousePosition();
 		if (point != null) {
@@ -586,7 +601,7 @@ public class AnimationFrame extends JFrame {
 			MouseInput.logicalY = Double.NaN;
 		}
 	}
-	
+
 	protected void thisContentPane_mousePressed(MouseEvent e) {
 		if (e.getButton() == MouseEvent.BUTTON1) {
 			MouseInput.leftButtonDown = true;
@@ -605,19 +620,21 @@ public class AnimationFrame extends JFrame {
 			//DO NOTHING
 		}
 	}
-	
+
 	protected void frameResized() {
-		
+
+		if (this.panel == null) {
+			return;
+		}
+
 		int newHeight = this.getBounds().height - 36;
 		int newWidth = this.getBounds().width - 20;
-		
+
 		//TODO... if the screen is maximized, then scaled, then brought back to original size, the scale is lost
-		
+
 		double heightScale = (double)newHeight / STANDARD_SCREEN_HEIGHT;
 		double widthScale = (double)newWidth / STANDARD_SCREEN_WIDTH;
-		
-		System.out.println(String.format("Animation frame: height=%5.2f; width=%5.2f",heightScale, widthScale));
-		
+
 		if (heightScale > widthScale) {
 			this.scale = previousScale * heightScale;
 		}
@@ -630,23 +647,26 @@ public class AnimationFrame extends JFrame {
 		this.screenWidth = newWidth;
 		screenOffsetX = screenWidth / 2;
 		screenOffsetY = screenHeight / 2;
-		
-	}
 
-	
+	}
 
 	protected void this_windowClosing(WindowEvent e) {
 		System.out.println("AnimationFrame.windowClosing()");
 		stop = true;
-		cancel = true;
-		dispose();	
+		windowClosed = true;
+	}
+
+	protected void this_windowClosed(WindowEvent e) {
+		System.out.println("AnimationFrame.windowClosed()");
+		stop = true;
+		windowClosed = true;
 	}
 	protected void contentPane_mouseExited(MouseEvent e) {
 		contentPane_mouseMoved(e);
 	}
 
-	public boolean isCancel() {
-		return cancel;
+	public boolean getwindowClosed() {
+		return windowClosed;
 	}
-	
+
 }
