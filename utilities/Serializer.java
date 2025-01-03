@@ -8,6 +8,14 @@ import java.util.ArrayList;
 
 public class Serializer 
 {
+	/*
+	 * Any object that implements the [Serializable interface](https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html)
+	 * can be written to and read from file using the methods below.
+	 * 
+	 * See also [Serializable Objects] (https://docs.oracle.com/javase/tutorial/jndi/objects/serial.html)
+	 * for an explanation of what serialization is
+	 */
+	
 	public static void serialize(Object o, String fileName)
 	{
 		ObjectOutputStream ouputStream = null;
