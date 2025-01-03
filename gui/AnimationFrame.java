@@ -3,6 +3,9 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -14,29 +17,37 @@ import java.awt.event.MouseMotionAdapter;
  * read input from the user (i.e. keyboard, mouse) and to render (draw) a universe or 'logical' layer. Also, it
  * continuously prompts the logical layer to update itself based on the number of milliseconds that have elapsed.
  * 
- * The presentation layer generally does not try to affect the logical layer; most information
- * passes "upwards" from the logical layer to the presentation layer.
+ * The presentation layer has access to data within the logical layer but generally only reads this data. Conversely, the logic
+ * layer does not have access to the presentation layer. This is known as a tiered architecture. This makes it easier to modify
+ * either without affecting the other
  */
 
 public class AnimationFrame extends JFrame {
 
-	final public static int FRAMES_PER_SECOND = 60;
-	protected long REFRESH_TIME = 1000 / FRAMES_PER_SECOND;	//MILLISECONDS
+	protected final int FRAMES_PER_SECOND = 60;
+	protected final long REFRESH_TIME = 1000 / FRAMES_PER_SECOND;	//MILLISECONDS
 
-	protected static int SCREEN_HEIGHT = 900;
-	protected static int SCREEN_WIDTH = 1200;
+	// An exception to the rule above... these variables are static so that they can be referenced by the logic layer, which may
+	// want to place sprites relative to the screen boundaries
+	protected static final int STANDARD_SCREEN_HEIGHT = 800;
+	protected static final int STANDARD_SCREEN_WIDTH = 1200;
+	
+	protected static int screenHeight = STANDARD_SCREEN_HEIGHT;
+	protected static int screenWidth = STANDARD_SCREEN_WIDTH;
 
 	//These variables control where the screen is centered in relation to the logical center of universe.
 	//Generally it makes sense to have these start at half screen width and height, so that the logical
 	//center is rendered in the center of the screen. Changing them will 'pan' the screen.
-	protected int screenOffsetX = SCREEN_WIDTH / 2;
-	protected int screenOffsetY = SCREEN_HEIGHT / 2;
+	protected int screenOffsetX = screenWidth / 2;
+	protected int screenOffsetY = screenHeight / 2;
 
-	protected boolean SHOW_GRID = true;
-	protected boolean DISPLAY_TIMING = false;
+	protected boolean showGrid = true;
+	protected boolean displayTiming = false;
 	
 	//scale at which to render the universe. When 1, each logical unit represents 1 pixel in both x and y dimension
 	protected double scale = 1;
+	//used to keep record of the scale if the frame is resized
+	protected double previousScale = scale;
 	//point in universe on which the screen will center
 	protected double logicalCenterX = 0;		
 	protected double logicalCenterY = 0;
@@ -47,7 +58,8 @@ public class AnimationFrame extends JFrame {
 	protected JLabel lblTop;
 	protected JLabel lblBottom;
 
-	protected static boolean stop = false;
+	protected boolean stop = false;
+	protected boolean cancel = false;
 
 	protected long total_elapsed_time = 0;
 	protected long lastRefreshTime = 0;
@@ -70,6 +82,13 @@ public class AnimationFrame extends JFrame {
 	public AnimationFrame(Animation animation)
 	{
 		super("");
+		this.setVisible(false);
+
+		this.addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				frameResized();
+			}
+		});		
 		getContentPane().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
@@ -84,11 +103,10 @@ public class AnimationFrame extends JFrame {
 				contentPane_mouseExited(e);
 			}
 		});
-		
+				
 		this.animation = animation;
-		this.setVisible(true);		
 		this.setFocusable(true);
-		this.setSize(SCREEN_WIDTH + 20, SCREEN_HEIGHT + 36);
+		this.setSize(screenWidth + 20, screenHeight + 36);
 
 		this.addWindowListener(new WindowAdapter() {
 			@Override
@@ -117,14 +135,16 @@ public class AnimationFrame extends JFrame {
 				contentPane_mouseMoved(e);
 			}
 		});
+		
 
+		
 		Container cp = getContentPane();
 		cp.setBackground(Color.BLACK);
 		cp.setLayout(null);
 
 		panel = new AnimationPanel();
 		panel.setLayout(null);
-		panel.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		panel.setSize(screenWidth, screenHeight);
 		getContentPane().add(panel, BorderLayout.CENTER);
 
 		btnPauseRun = new JButton("||");
@@ -136,7 +156,7 @@ public class AnimationFrame extends JFrame {
 		});
 
 		btnPauseRun.setFont(new Font("Tahoma", Font.BOLD, 12));
-		btnPauseRun.setBounds(SCREEN_WIDTH - 64, 20, 48, 32);
+		btnPauseRun.setBounds(screenWidth - 64, 20, 48, 32);
 		btnPauseRun.setFocusable(false);
 		getContentPane().add(btnPauseRun);
 		getContentPane().setComponentZOrder(btnPauseRun, 0);
@@ -144,14 +164,14 @@ public class AnimationFrame extends JFrame {
 		lblTop = new JLabel("Time: ");
 		lblTop.setForeground(Color.WHITE);
 		lblTop.setFont(new Font("Consolas", Font.BOLD, 20));
-		lblTop.setBounds(16, 22, SCREEN_WIDTH - 16, 30);
+		lblTop.setBounds(16, 22, screenWidth - 16, 30);
 		getContentPane().add(lblTop);
 		getContentPane().setComponentZOrder(lblTop, 0);
 
 		lblBottom = new JLabel("Status");
 		lblBottom.setForeground(Color.WHITE);
 		lblBottom.setFont(new Font("Consolas", Font.BOLD, 30));
-		lblBottom.setBounds(16, SCREEN_HEIGHT - 30 - 16, SCREEN_WIDTH - 16, 36);
+		lblBottom.setBounds(16, screenHeight - 30 - 16, screenWidth - 16, 36);
 		lblBottom.setHorizontalAlignment(SwingConstants.CENTER);
 		getContentPane().add(lblBottom);
 		getContentPane().setComponentZOrder(lblBottom, 0);
@@ -186,8 +206,11 @@ public class AnimationFrame extends JFrame {
 	/*
 	 * You can add code for displaying gui elements when the animation initializes using a JDialog or similar
 	 * 
-	 * Note that this method runs runs asynchronous with the instantiation of the animation loop, which may
-	 * take significant time. Thus, this is an ideal place for a title screen
+	 * Note that this method runs on a separate thread from the animation (i.e. the logic layer) and the
+	 * animation will start to run in parallel.
+
+	 * This may be useful is your animation takes some time to instantiate, and you want to display
+	 * a 'splash' screen while it does so.
 	 */
 	protected void animationInitialize() {
 		
@@ -196,8 +219,10 @@ public class AnimationFrame extends JFrame {
 	/*
 	 * You can add code for displaying gui elements when the animation starts using a JDialog or similar
 	 * 
-	 * Note that this method runs runs synchronous within the animation thread. Thus, if the a modal dialogue
-	 * is shown, the animation will not start, but a non-modal dialogue will appear alongside the animation
+	 * Note that this method runs on the same thread as the animation (i.e. the logic layer) and the
+	 * animation will therefore not start until this method is complete.
+	 * 
+	 * E.g. if you display a modal dialog here, the animation will not run until that dialogue is closed
 	 */
 	protected void animationStart() {		
 	}
@@ -256,6 +281,11 @@ public class AnimationFrame extends JFrame {
 		universe = animation.getCurrentUniverse();
 
 		animationStart();
+
+		//it may be that the animation is stopped before it even started... in this case, do not ever make the frame visible
+//		if (stop != false) {
+			this.setVisible(true);
+//		}
 		
 		/* 
 		 * outer game loop, which will run until stop is signaled or the animation is complete
@@ -275,7 +305,7 @@ public class AnimationFrame extends JFrame {
 			// inner game loop which will animate the current universe until stop is signaled or until the universe is complete / switched
 			while (stop == false && animation.isComplete() == false && universe.isComplete() == false && animation.getUniverseSwitched() == false) {
 				
-				if (DISPLAY_TIMING == true) System.out.println(String.format("animation loop: %10s @ %6d", "sleep", System.currentTimeMillis() % 1000000));
+				if (displayTiming == true) System.out.println(String.format("animation loop: %10s @ %6d", "sleep", System.currentTimeMillis() % 1000000));
 
 				//adapted from http://www.java-gaming.org/index.php?topic=24220.0
 				long target_wake_time = System.currentTimeMillis() + REFRESH_TIME;
@@ -293,7 +323,7 @@ public class AnimationFrame extends JFrame {
 
 				}
 
-				if (DISPLAY_TIMING == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "wake", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
+				if (displayTiming == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "wake", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
 
 				//track time that has elapsed since the last update, and note the refresh time
 				deltaTime = (isPaused ? 0 : System.currentTimeMillis() - lastRefreshTime);
@@ -308,12 +338,15 @@ public class AnimationFrame extends JFrame {
 				animation.update(this, deltaTime);
 				universe.update(animation, deltaTime);
 
-				if (DISPLAY_TIMING == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "logic", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
+				if (displayTiming == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "logic", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
 				
 				//update interface
 				updateControls();
+				
+				//create local copies of values from the universe. this seems to improve performance substantially
 				this.logicalCenterX = universe.getXCenter();
 				this.logicalCenterY = universe.getYCenter();
+				
 				MouseInput.logicalX = translateToLogicalX(MouseInput.screenX);
 				MouseInput.logicalY = translateToLogicalY(MouseInput.screenY);
 
@@ -325,7 +358,7 @@ public class AnimationFrame extends JFrame {
 
 		System.out.println("animation complete");
 		AudioPlayer.setStopAll(true);
-		dispose();	
+		dispose();
 
 	}
 
@@ -359,10 +392,12 @@ public class AnimationFrame extends JFrame {
 		}
 		if (keyboard.keyDown(KeyboardInput.KEY_F1)) {
 			scale *= 1.01;
+			previousScale = scale;
 			contentPane_mouseMoved(null);
 		}
 		if (keyboard.keyDown(KeyboardInput.KEY_F2)) {
 			scale /= 1.01;
+			previousScale = scale;
 			contentPane_mouseMoved(null);
 		}
 		
@@ -379,10 +414,10 @@ public class AnimationFrame extends JFrame {
 			screenOffsetY -= 1;
 		}
 		if (keyboard.keyDownOnce(KeyboardInput.KEY_G)) {
-			this.SHOW_GRID = !this.SHOW_GRID;
+			this.showGrid = !this.showGrid;
 		}
 		if (keyboard.keyDownOnce(KeyboardInput.KEY_T)) {
-			this.DISPLAY_TIMING = !this.DISPLAY_TIMING;
+			this.displayTiming = !this.displayTiming;
 		}
 	}
 
@@ -426,28 +461,28 @@ public class AnimationFrame extends JFrame {
 				}				
 			}
 			
-			if (SHOW_GRID) {
-				for (int x = 0; x <= SCREEN_WIDTH; x+=50) {
+			if (showGrid) {
+				for (int x = 0; x <= screenWidth; x+=50) {
 					if (x % 100 == 0) {
 						g.setColor(Color.GRAY);						
 					} else {
 						g.setColor(Color.DARK_GRAY);						
 					}					
-					g.drawLine(x, 0, x, SCREEN_HEIGHT);
+					g.drawLine(x, 0, x, screenHeight);
 				}
-				for (int y = 0; y <= SCREEN_HEIGHT; y+= 50) {
+				for (int y = 0; y <= screenHeight; y+= 50) {
 					if (y % 100 == 0) {
 						g.setColor(Color.GRAY);						
 					} else {
 						g.setColor(Color.DARK_GRAY);						
 					}
-					g.drawLine(0, y, SCREEN_WIDTH, y);
+					g.drawLine(0, y, screenWidth, y);
 				}
 			}			
 
 			paintAnimationPanel(g);
 			
-			if (DISPLAY_TIMING == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "interface", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
+			if (displayTiming == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "interface", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
 			
 		}
 		
@@ -483,7 +518,7 @@ public class AnimationFrame extends JFrame {
 					if (tile.getWidth() <= 0 || tile.getHeight() <= 0) {
 						//no increase in width; will cause an infinite loop, so consider this screen to be done
 						g.setColor(Color.GRAY);
-						g.fillRect(0,0, SCREEN_WIDTH, SCREEN_HEIGHT);					
+						g.fillRect(0,0, screenWidth, screenHeight);					
 						rowDrawn = true;
 						screenDrawn = true;						
 					}
@@ -494,7 +529,7 @@ public class AnimationFrame extends JFrame {
 						g.drawImage(tile.getImage(), translateToScreenX(tile.getMinX() + background.getShiftX()), translateToScreenY(tile.getMinY() + background.getShiftY()), width, height, null);
 					}					
 					//does the RHE of this tile extend past the RHE of the visible area?
-					if (translateToScreenX(tile.getMinX() + background.getShiftX() + tile.getWidth()) > SCREEN_WIDTH || tile.isOutOfBounds()) {
+					if (translateToScreenX(tile.getMinX() + background.getShiftX() + tile.getWidth()) > screenWidth || tile.isOutOfBounds()) {
 						rowDrawn = true;
 					}
 					else {
@@ -502,7 +537,7 @@ public class AnimationFrame extends JFrame {
 					}
 				}
 				//does the bottom edge of this tile extend past the bottom edge of the visible area?
-				if (translateToScreenY(tile.getMinY() + background.getShiftY() + tile.getHeight()) > SCREEN_HEIGHT || tile.isOutOfBounds()) {
+				if (translateToScreenY(tile.getMinY() + background.getShiftY() + tile.getHeight()) > screenHeight || tile.isOutOfBounds()) {
 					screenDrawn = true;
 				}
 				else {
@@ -570,13 +605,48 @@ public class AnimationFrame extends JFrame {
 			//DO NOTHING
 		}
 	}
+	
+	protected void frameResized() {
+		
+		int newHeight = this.getBounds().height - 36;
+		int newWidth = this.getBounds().width - 20;
+		
+		//TODO... if the screen is maximized, then scaled, then brought back to original size, the scale is lost
+		
+		double heightScale = (double)newHeight / STANDARD_SCREEN_HEIGHT;
+		double widthScale = (double)newWidth / STANDARD_SCREEN_WIDTH;
+		
+		System.out.println(String.format("Animation frame: height=%5.2f; width=%5.2f",heightScale, widthScale));
+		
+		if (heightScale > widthScale) {
+			this.scale = previousScale * heightScale;
+		}
+		else {
+			this.scale = previousScale * widthScale;			
+		}
+		this.panel.setSize(this.getBounds().width - 20, this.getBounds().height - 36);
+
+		this.screenHeight = newHeight;
+		this.screenWidth = newWidth;
+		screenOffsetX = screenWidth / 2;
+		screenOffsetY = screenHeight / 2;
+		
+	}
+
+	
 
 	protected void this_windowClosing(WindowEvent e) {
-		System.out.println("windowClosing()");
+		System.out.println("AnimationFrame.windowClosing()");
 		stop = true;
+		cancel = true;
 		dispose();	
 	}
 	protected void contentPane_mouseExited(MouseEvent e) {
 		contentPane_mouseMoved(e);
 	}
+
+	public boolean isCancel() {
+		return cancel;
+	}
+	
 }
