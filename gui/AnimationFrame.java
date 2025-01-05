@@ -507,7 +507,7 @@ public class AnimationFrame extends JFrame {
 					g.drawLine(x, 0, x, screenHeight);
 					g2.drawString(String.format("%3d", x),
 							x,
-							screenOffsetY+30);
+							15);
 				}
 				for (int y = 0; y <= screenHeight; y+= 50) {
 					if (y % 100 == 0) {
@@ -517,7 +517,7 @@ public class AnimationFrame extends JFrame {
 					}
 					g.drawLine(0, y, screenWidth, y);
 					g2.drawString(String.format("%3d", y),
-							screenOffsetX+10,
+							0,
 							y);
 				}
 			}
@@ -540,24 +540,24 @@ public class AnimationFrame extends JFrame {
 	
 				for (int x = minX; x <= maxX; x+=50) {
 					if (x % 100 == 0) {
-						g.setColor(DARK_BLUE);						
-					} else {
 						g.setColor(LIGHT_BLUE);						
+					} else {
+						g.setColor(DARK_BLUE);						
 					}					
 					g.drawLine(translateToScreenX(x) , 0, translateToScreenX(x), screenHeight);
 					g2.drawString(String.format("%5d", x),
 							translateToScreenX(x),
-							translateToScreenY(midY) + (int)(30 * scale));
+							15);
 				}
 				for (int y = minY; y <= maxY; y+= 50) {
 					if (y % 100 == 0) {
-						g.setColor(DARK_BLUE);						
-					} else {
 						g.setColor(LIGHT_BLUE);						
+					} else {
+						g.setColor(DARK_BLUE);						
 					}
 					g.drawLine(0, translateToScreenY(y), screenWidth, translateToScreenY(y));
 					g2.drawString(String.format("%5d", y),
-							translateToScreenX(midX) + (int)(10 * scale),
+							0,
 							translateToScreenY(y));
 				}						
 			}
