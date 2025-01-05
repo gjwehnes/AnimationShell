@@ -41,7 +41,8 @@ public class AnimationFrame extends JFrame {
 	protected int screenOffsetX = screenWidth / 2;
 	protected int screenOffsetY = screenHeight / 2;
 
-	protected boolean showGrid = true;
+	protected boolean showScreenGrid = true;
+	protected boolean showLogicalGrid;
 	protected boolean displayTiming = false;
 
 	//scale at which to render the universe. When 1, each logical unit represents 1 pixel in both x and y dimension
@@ -75,6 +76,11 @@ public class AnimationFrame extends JFrame {
 	protected ArrayList<Background> backgrounds = null;
 	protected Background background = null;
 
+	protected final Color DARK_GRAY = Color.DARK_GRAY;
+	protected final Color LIGHT_GRAY = Color.LIGHT_GRAY;
+ 	protected final Color DARK_BLUE = new Color(0,0,128);
+ 	protected final Color LIGHT_BLUE = new Color(0,0,255);
+	
 	/*
 	 * Much of the following constructor uses a library called Swing to create various graphical controls. You do not need
 	 * to modify this code to create an animation, but certainly many custom controls could be added.
@@ -429,7 +435,10 @@ public class AnimationFrame extends JFrame {
 			screenOffsetY -= 1;
 		}
 		if (keyboard.keyDownOnce(KeyboardInput.KEY_G)) {
-			this.showGrid = !this.showGrid;
+			this.showScreenGrid = !this.showScreenGrid;
+		}
+		if (keyboard.keyDownOnce(KeyboardInput.KEY_L)) {
+			this.showLogicalGrid = !this.showLogicalGrid;
 		}
 		if (keyboard.keyDownOnce(KeyboardInput.KEY_T)) {
 			this.displayTiming = !this.displayTiming;
@@ -476,14 +485,29 @@ public class AnimationFrame extends JFrame {
 				}				
 			}
 
-			if (showGrid) {
+			drawScreenGrid(g);
+			drawLogicalGrid(g);
+
+			paintAnimationPanel(g);
+
+			if (displayTiming == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "interface", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
+
+		}
+		
+		private void drawScreenGrid(Graphics g) {
+			
+			if (showScreenGrid) {
+				Graphics2D g2 = (Graphics2D) g;				
 				for (int x = 0; x <= screenWidth; x+=50) {
 					if (x % 100 == 0) {
 						g.setColor(Color.GRAY);						
 					} else {
 						g.setColor(Color.DARK_GRAY);						
-					}					
+					}			
 					g.drawLine(x, 0, x, screenHeight);
+					g2.drawString(String.format("%3d", x),
+							x,
+							screenOffsetY+30);
 				}
 				for (int y = 0; y <= screenHeight; y+= 50) {
 					if (y % 100 == 0) {
@@ -492,13 +516,51 @@ public class AnimationFrame extends JFrame {
 						g.setColor(Color.DARK_GRAY);						
 					}
 					g.drawLine(0, y, screenWidth, y);
+					g2.drawString(String.format("%3d", y),
+							screenOffsetX+10,
+							y);
 				}
-			}			
+			}
+			
+		}
+	
+		
+		private void drawLogicalGrid(Graphics g) {
 
-			paintAnimationPanel(g);
-
-			if (displayTiming == true) System.out.println(String.format("animation loop: %10s @ %6d  (+%4d ms)", "interface", System.currentTimeMillis() % 1000000, System.currentTimeMillis() - lastRefreshTime));
-
+			if (showLogicalGrid) {
+			
+				Graphics2D g2 = (Graphics2D) g;
+				
+				int minX = (int) (Math.floor(translateToLogicalX(0) / 50) * 50);
+				int minY = (int) (Math.floor(translateToLogicalY(0) / 50) * 50);
+				int maxX = (int) (Math.floor(translateToLogicalX(screenWidth) / 50) * 50);
+				int maxY = (int) (Math.floor(translateToLogicalY(screenHeight) / 50) * 50);
+				int midX = (minX + maxX) / 2;
+				int midY = (minY + maxY) / 2;
+	
+				for (int x = minX; x <= maxX; x+=50) {
+					if (x % 100 == 0) {
+						g.setColor(DARK_BLUE);						
+					} else {
+						g.setColor(LIGHT_BLUE);						
+					}					
+					g.drawLine(translateToScreenX(x) , 0, translateToScreenX(x), screenHeight);
+					g2.drawString(String.format("%5d", x),
+							translateToScreenX(x),
+							translateToScreenY(midY) + (int)(30 * scale));
+				}
+				for (int y = minY; y <= maxY; y+= 50) {
+					if (y % 100 == 0) {
+						g.setColor(DARK_BLUE);						
+					} else {
+						g.setColor(LIGHT_BLUE);						
+					}
+					g.drawLine(0, translateToScreenY(y), screenWidth, translateToScreenY(y));
+					g2.drawString(String.format("%5d", y),
+							translateToScreenX(midX) + (int)(10 * scale),
+							translateToScreenY(y));
+				}						
+			}
 		}
 
 		/*
