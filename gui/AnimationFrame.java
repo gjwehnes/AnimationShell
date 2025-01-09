@@ -58,8 +58,9 @@ public class AnimationFrame extends JFrame {
 	protected JButton btnPauseRun;
 	protected JLabel lblTop;
 	protected JLabel lblBottom;
-
-	protected boolean stop = false;
+	
+	protected boolean stopApplication = false;
+	protected boolean stopAnimation = false;
 	protected boolean windowClosed = false;
 
 	protected long total_elapsed_time = 0;
@@ -296,14 +297,14 @@ public class AnimationFrame extends JFrame {
 		animationStart();
 
 		//it may be that the animation is stopped before it even started... in this case, do not ever make the frame visible
-		if (stop == false) {
+		if (stopAnimation == false) {
 			this.setVisible(true);
 		}
 
 		/* 
 		 * outer game loop, which will run until stop is signaled or the animation is complete
 		 */
-		while (stop == false && animation.isComplete() == false) {
+		while (stopAnimation == false && animation.isComplete() == false) {
 
 			//before the next universe is animated, allow other actions to take place
 			universeSwitched();
@@ -316,7 +317,7 @@ public class AnimationFrame extends JFrame {
 			keyboard.poll();
 
 			// inner game loop which will animate the current universe until stop is signaled or until the universe is complete / switched
-			while (stop == false && animation.isComplete() == false && universe.isComplete() == false && animation.getUniverseSwitched() == false) {
+			while (stopAnimation == false && animation.isComplete() == false && universe.isComplete() == false && animation.getUniverseSwitched() == false) {
 
 				if (displayTiming == true) System.out.println(String.format("animation loop: %10s @ %6d", "sleep", System.currentTimeMillis() % 1000000));
 
@@ -403,7 +404,7 @@ public class AnimationFrame extends JFrame {
 		}
 	}
 
-	private void handleKeyboardInput() {
+	protected void handleKeyboardInput() {
 
 		if (keyboard.keyDown(KeyboardInput.KEY_P) && ! isPaused) {
 			btnPauseRun_mouseClicked(null);	
@@ -714,21 +715,32 @@ public class AnimationFrame extends JFrame {
 
 	protected void this_windowClosing(WindowEvent e) {
 		System.out.println("AnimationFrame.windowClosing()");
-		stop = true;
+		stopApplication = true;
+		stopAnimation = true;
 		windowClosed = true;
 	}
 
 	protected void this_windowClosed(WindowEvent e) {
 		System.out.println("AnimationFrame.windowClosed()");
-		stop = true;
+		stopApplication = true;
+		stopAnimation = true;
 		windowClosed = true;
 	}
 	protected void contentPane_mouseExited(MouseEvent e) {
 		contentPane_mouseMoved(e);
 	}
+	
+	public boolean getStopApplication() {
+		return stopApplication;
+	}
 
-	public boolean getwindowClosed() {
+	public boolean getStopAnimation() {
+		return stopAnimation;
+	}
+
+	public boolean getWindowClosed() {
 		return windowClosed;
 	}
+	
 
 }

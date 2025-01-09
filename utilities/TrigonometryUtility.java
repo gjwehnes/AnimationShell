@@ -2,15 +2,15 @@ public class TrigonometryUtility {
 
 	public static double calculateStandardAngle(double xA, double yA, double xB, double yB) {
 
-		// Calculate standard angles in java that corresponds to the screen coordinates instead of the
-		// mathematical definition. This is somewhat complicated because, opposite to a Cartesian grid
-		// the y dimension increases towards the bottom of the screen. Thus, our 'standard'
-		// angle is reversed from the mathematical definition. 0 is still to the right,
-		// but positive angles indicate clockwise rotation. 90 is the bottom of the screen,
-		// 180 is the left, and 270 is the top. That allows the sine, cosine, and tangent ratios
-		// still correctly correspond to the standard angle
-
-		// Thus, quadrants are reversed. Top right is I, bottom right is II,
+			// Calculate standard angles in java that corresponds to the screen coordinates instead of the
+			// mathematical definition. This is somewhat complicated because, opposite to a Cartesian grid
+			// the y dimension increases towards the bottom of the screen. Thus, our 'standard'
+			// angle is reversed from the mathematical definition. 0 is still to the right,
+			// but positive angles indicate clockwise rotation. 90 is the bottom of the screen,
+			// 180 is the left, and 270 is the top. That allows the sine, cosine, and tangent ratios
+			// still correctly correspond to the standard angle
+	
+			// Thus, quadrants are reversed. Top right is I, bottom right is II,
 		// bottom left is III, top left is IV
 
 		// As a further complication, methods in the Math class work with radians, which
