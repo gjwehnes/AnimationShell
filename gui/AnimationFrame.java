@@ -59,6 +59,16 @@ public class AnimationFrame extends JFrame {
 	protected JLabel lblTop;
 	protected JLabel lblBottom;
 	
+	/* 
+	 * These three variables provide information on the state of the animation and the frame.
+	 * -stopApplication can be used to signal exactly this. This may be used to trigger other threads
+	 * (e.g. the Main class) to close all other resources.
+	 * -stopAnimation is intended to signal the end of an animation, but may still allow other elements
+	 * to continue running (e.g. a high score frame, a play again frame, etc).
+	 * -windowClosed indicates that the window has been closed by used action, which may trigger
+	 * the end of application or end of animation
+	 */
+
 	protected boolean stopApplication = false;
 	protected boolean stopAnimation = false;
 	protected boolean windowClosed = false;
