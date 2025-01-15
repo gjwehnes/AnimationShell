@@ -202,16 +202,21 @@ public class AnimationFrame extends JFrame {
 		repositionComponents();
 	}
 	
-	private void repositionComponents() {
+	protected void repositionComponents() {
 		
 		/*
 		 * If the window can be resized, you may want to have this method to also
 		 * reposition your components relative to the new dimensions. This method is
 		 * called initially by the constructor and also by the frameResized event handler
 		 */
-		btnPauseRun.setBounds(screenWidth - 64, 20, 48, 32);
-		lblTop.setBounds(16, 22, screenWidth - 16, 30);
-		lblBottom.setBounds(16, screenHeight - 30 - 16, screenWidth - 16, 36);
+		
+		// careful that the components have been instantiated...
+		if (lblBottom != null) {
+			btnPauseRun.setBounds(screenWidth - 64, 20, 48, 32);
+			lblTop.setBounds(16, 22, screenWidth - 16, 30);
+			lblBottom.setBounds(16, screenHeight - 30 - 16, screenWidth - 16, 36);
+		}
+			
 		
 	}
 
