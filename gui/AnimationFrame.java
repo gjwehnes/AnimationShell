@@ -124,6 +124,7 @@ public class AnimationFrame extends JFrame {
 		this.animation = animation;
 		this.setFocusable(true);
 		this.setSize(screenWidth + 20, screenHeight + 36);
+		this.setMinimumSize(new Dimension(screenWidth + 20 - 100, screenHeight + 36 - 100));
 
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);		
 		this.addWindowListener(new WindowAdapter() {
@@ -198,6 +199,20 @@ public class AnimationFrame extends JFrame {
 		getContentPane().add(lblBottom);
 		getContentPane().setComponentZOrder(lblBottom, 0);
 
+		repositionComponents();
+	}
+	
+	private void repositionComponents() {
+		
+		/*
+		 * If the window can be resized, you may want to have this method to also
+		 * reposition your components relative to the new dimensions. This method is
+		 * called initially by the constructor and also by the frameResized event handler
+		 */
+		btnPauseRun.setBounds(screenWidth - 64, 20, 48, 32);
+		lblTop.setBounds(16, 22, screenWidth - 16, 30);
+		lblBottom.setBounds(16, screenHeight - 30 - 16, screenWidth - 16, 36);
+		
 	}
 
 	/* 
@@ -696,6 +711,7 @@ public class AnimationFrame extends JFrame {
 
 	protected void frameResized() {
 
+		// Credit to CK for the original code
 		if (this.panel == null) {
 			return;
 		}
@@ -720,19 +736,19 @@ public class AnimationFrame extends JFrame {
 		this.screenWidth = newWidth;
 		screenOffsetX = screenWidth / 2;
 		screenOffsetY = screenHeight / 2;
+		
+		repositionComponents();		
 
 	}
 
 	protected void this_windowClosing(WindowEvent e) {
 		System.out.println("AnimationFrame.windowClosing()");
-		stopApplication = true;
 		stopAnimation = true;
 		windowClosed = true;
 	}
 
 	protected void this_windowClosed(WindowEvent e) {
 		System.out.println("AnimationFrame.windowClosed()");
-		stopApplication = true;
 		stopAnimation = true;
 		windowClosed = true;
 	}
