@@ -89,8 +89,8 @@ public class AnimationFrame extends JFrame {
 
 	protected final Color DARK_GRAY = Color.DARK_GRAY;
 	protected final Color LIGHT_GRAY = Color.LIGHT_GRAY;
- 	protected final Color DARK_BLUE = new Color(0,0,128);
- 	protected final Color LIGHT_BLUE = new Color(0,0,255);
+ 	protected final Color DARK_YELLOW = new Color(128, 128, 0);
+ 	protected final Color YELLOW = Color.YELLOW;
 	
 	/*
 	 * Much of the following constructor uses a library called Swing to create various graphical controls. You do not need
@@ -571,9 +571,9 @@ public class AnimationFrame extends JFrame {
 	
 				for (int x = minX; x <= maxX; x+=50) {
 					if (x % 100 == 0) {
-						g.setColor(LIGHT_BLUE);						
+						g.setColor(YELLOW);						
 					} else {
-						g.setColor(DARK_BLUE);						
+						g.setColor(DARK_YELLOW);						
 					}					
 					g.drawLine(translateToScreenX(x) , 0, translateToScreenX(x), screenHeight);
 					g2.drawString(String.format("%5d", x),
@@ -582,9 +582,9 @@ public class AnimationFrame extends JFrame {
 				}
 				for (int y = minY; y <= maxY; y+= 50) {
 					if (y % 100 == 0) {
-						g.setColor(LIGHT_BLUE);						
+						g.setColor(YELLOW);						
 					} else {
-						g.setColor(DARK_BLUE);						
+						g.setColor(DARK_YELLOW);						
 					}
 					g.drawLine(0, translateToScreenY(y), screenWidth, translateToScreenY(y));
 					g2.drawString(String.format("%5d", y),
