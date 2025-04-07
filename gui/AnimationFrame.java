@@ -41,8 +41,8 @@ public class AnimationFrame extends JFrame {
 	protected int screenOffsetX = screenWidth / 2;
 	protected int screenOffsetY = screenHeight / 2;
 
-	protected boolean showScreenGrid = true;
-	protected boolean showLogicalGrid;
+	protected boolean showScreenGrid = false;
+	protected boolean showLogicalGrid = true;
 	protected boolean displayTiming = false;
 
 	//scale at which to render the universe. When 1, each logical unit represents 1 pixel in both x and y dimension
@@ -454,18 +454,18 @@ public class AnimationFrame extends JFrame {
 		}
 
 		if (keyboard.keyDown(KeyboardInput.KEY_A)) {
-			screenOffsetX += 1;
+			screenOffsetX += 5;
 		}
 		if (keyboard.keyDown(KeyboardInput.KEY_D)) {
-			screenOffsetX -= 1;
+			screenOffsetX -= 5;
+		}
+		if (keyboard.keyDown(KeyboardInput.KEY_W)) {
+			screenOffsetY += 5;
 		}
 		if (keyboard.keyDown(KeyboardInput.KEY_S)) {
-			screenOffsetY += 1;
+			screenOffsetY -= 5;
 		}
-		if (keyboard.keyDown(KeyboardInput.KEY_X)) {
-			screenOffsetY -= 1;
-		}
-		if (keyboard.keyDownOnce(KeyboardInput.KEY_G)) {
+		if (keyboard.keyDownOnce(KeyboardInput.KEY_P)) {
 			this.showScreenGrid = !this.showScreenGrid;
 		}
 		if (keyboard.keyDownOnce(KeyboardInput.KEY_L)) {
