@@ -229,7 +229,7 @@ public class CollisionDetection {
 
 			//if the target of the current sprite is not contained in a list of 'target' types, then do not attempt to 
 			//calculate a collision
-			if ( (sprite == barrier) || (collisionTargetTypes != null) && ( collisionTargetTypes.contains(barrier.getClass()) == false)) {
+			if ( (sprite == barrier) ||  (collisionTargetTypes != null) && ( collisionTargetTypes.contains(barrier.getClass()) == false)) {
 				continue;				
 			}
 						
@@ -251,6 +251,7 @@ public class CollisionDetection {
 						//invert the proposed motion
 						bounce.centerX = sprite.getCenterX() - movementX;
 						bounce.velocityX = (velocityX * bounceFactorX * -1);
+						bounce.didBounce = true;
 					}					
 				} else {
 					//bounce in Y dimension
@@ -258,6 +259,7 @@ public class CollisionDetection {
 						//invert the proposed motion
 						bounce.centerY = sprite.getCenterY() - movementY;
 						bounce.velocityY = (velocityY * bounceFactorY * -1);
+						bounce.didBounce = true;
 					}										
 				}				
 			}
@@ -273,6 +275,7 @@ public class CollisionDetection {
 						double leadingEdge = barrier.getMinX() - ( (movementX - distanceToBoundary) * bounceFactorX);
 						bounce.centerX = leadingEdge - (sprite.getWidth() / 2);
 						bounce.velocityX = (velocityX * bounceFactorX * -1);
+						bounce.didBounce = true;
 					}
 					else {
 						//moving to left
@@ -280,6 +283,7 @@ public class CollisionDetection {
 						double leadingEdge = barrier.getMaxX() + ( ((movementX * -1) - distanceToBoundary) * bounceFactorX);
 						bounce.centerX = leadingEdge + (sprite.getWidth() / 2);
 						bounce.velocityX = (velocityX * bounceFactorX * -1);
+						bounce.didBounce = true;
 					}
 				}
 				//y dimension
@@ -291,6 +295,7 @@ public class CollisionDetection {
 						double leadingEdge = barrier.getMinY() - ( (movementY - distanceToBoundary) * bounceFactorY);
 						bounce.centerY = leadingEdge - (sprite.getWidth() / 2);
 						bounce.velocityY = (velocityY * bounceFactorY * -1);
+						bounce.didBounce = true;
 					}
 					else {
 						//moving up
@@ -298,6 +303,7 @@ public class CollisionDetection {
 						double leadingEdge = barrier.getMaxY() + ( ((movementY * -1) - distanceToBoundary) * bounceFactorY);
 						bounce.centerY = leadingEdge + (sprite.getWidth() / 2);
 						bounce.velocityY = (velocityY * bounceFactorY * -1);
+						bounce.didBounce = true;
 					}
 					
 				}
