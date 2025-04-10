@@ -436,10 +436,7 @@ public class AnimationFrame extends JFrame {
 
 	protected void handleKeyboardInput() {
 
-		if (keyboard.keyDown(KeyboardInput.KEY_P) && ! isPaused) {
-			btnPauseRun_mouseClicked(null);	
-		}
-		if (keyboard.keyDown(KeyboardInput.KEY_O) && isPaused ) {
+		if (keyboard.keyDownOnce(KeyboardInput.KEY_SPACE)) {
 			btnPauseRun_mouseClicked(null);
 		}
 		if (keyboard.keyDown(KeyboardInput.KEY_F1)) {
