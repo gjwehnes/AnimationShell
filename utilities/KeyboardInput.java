@@ -31,6 +31,7 @@ public class KeyboardInput implements KeyListener {
 	public static final int KEY_PAUSE_BREAK = 19;
 	public static final int KEY_CAPS_LOCK = 20;
 	public static final int KEY_ESCAPE = 27;
+	public static final int KEY_SPACE = 32;
 	public static final int KEY_PAGE_UP = 33;
 	public static final int KEY_PAGE_DOWN = 34;
 	public static final int KEY_END = 35;
