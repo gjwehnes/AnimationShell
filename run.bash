@@ -1,5 +1,6 @@
 
 echo "compile"
-javac -classpath . utilities/*.java backgrounds/*.java sprites/*.java universes/*.java  gui/*.java main/*.java -d ./bin
+javac -classpath . animations/*.java backgrounds/*.java gui/*.java main/*.java sprites/*.java universes/*.java utilities/*.java backgrounds/*.java  -d ./bin
+
 echo "run Main.java"
 java -classpath ./bin Main
