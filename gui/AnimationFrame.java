@@ -294,6 +294,7 @@ public class AnimationFrame extends JFrame {
 		sprites = universe.getSprites();
 		backgrounds = universe.getBackgrounds();
 		this.scale = universe.getScale();
+		this.previousScale = this.scale;
 	}
 
 
@@ -322,7 +323,7 @@ public class AnimationFrame extends JFrame {
 		System.out.println("animationLoop() start");
 
 		lastRefreshTime = System.currentTimeMillis();		
-		universe = animation.getCurrentUniverse();
+		setLocalObjectVariables();
 
 		animationStart();
 
@@ -734,6 +735,7 @@ public class AnimationFrame extends JFrame {
 		else {
 			this.scale = previousScale * widthScale;			
 		}
+		
 		this.panel.setSize(this.getBounds().width - 20, this.getBounds().height - 36);
 
 		this.screenHeight = newHeight;
